@@ -1,0 +1,155 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# This workflow lets you generate SLSA provenance file for your project.
+# The generation satisfies level 3 for the provenance requirements - see https://slsa.dev/spec/v0.1/requirements
+# The project is an initiative of the OpenSSF (openssf.org) and is developed at
+# https://github.com/slsa-framework/slsa-github-generator.
+# The provenance file can be verified using https://github.com/slsa-framework/slsa-verifier.
+# For more information about SLSA and how it improves the supply-chain, visit slsa.dev.
+
+name: SLSA generic generator
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      digests: ${{ steps.hash.outputs.digests }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ========================================================
+      #
+      # Step 1: Build your artifacts.
+      #
+      # ========================================================
+      - name: Build artifacts
+        run: |
+            # These are some amazing artifacts.
+            echo "artifact1" > artifact1
+            echo "artifact2" > artifact2
+
+      # ========================================================
+      #
+      # Step 2: Add a step to generate the provenance subjects
+      #         as shown below. Update the sha256 sum arguments
+      #         to include all binaries that you generate
+      #         provenance for.
+      #
+      # ========================================================
+      - name: Generate subject for provenance
+        id: hash
+        run: |
+          set -euo pipefail
+
+          # List the artifacts the provenance will refer to.
+          files=$(ls artifact*)
+          # Generate the subjects (base64 encoded).
+          echo "hashes=$(sha256sum $files | base64 -w0)" >> "${GITHUB_OUTPUT}"
+
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read   # To read the workflow path.
+      id-token: write # To sign the provenance.
+      contents: write # To add assets to a release.
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.4.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.digests }}"
+      upload-assets: true # Optional: Upload to a new release
+                  - name: KSOC Guard
+  # You may pin to the exact commit or the version.
+  # uses: ksoclabs/guard-action@e61edd337d11df1ec4f8d5279f2f9937a7d1dadc
+  uses: ksoclabs/guard-action@v0.0.10
+  with:
+    # The severity level at which to fail the workflow. Valid values are: none, low, medium, high, critical.
+    fail_on_severity: # optional, default is none
+    # The format of the output. Valid values are: ci-table, table.
+    format: # optional, default is ci-table
+    # Comma separated list of paths to ignore.
+    ignored_paths: # optional
+    # Comma separated list of policy IDs to ignore.
+    ignored_policies: # optional
+    # The KSOC access key ID.
+    ksoc_access_key_id: # optional
+    # The KSOC account ID.
+    ksoc_account_id: # optional
+    # The KSOC API URL.
+    ksoc_api_url: # optional, default is https://api.ksoc.com
+    # The KSOC secret key.
+    ksoc_secret_key: # optional
+    # Comma separated list of paths to scan.
+    paths: # optional, default is .
+    # The directory containing the policies to execute.
+    policy_dir: # optional
+    # Comma separated list of policy IDs to execute.
+    policy_ids: # optional
+    # Comma separated list of policy tags to execute.
+    policy_tags: # optional
+               - name: Setup Flowpipe
+  # You may pin to the exact commit or the version.
+  # uses: turbot/flowpipe-action-setup@cb25645f42ae071a051b83fcac8a6efe76462af8
+  uses: turbot/flowpipe-action-setup@v1.0.0
+  with:
+    # Flowpipe CLI version to install. Defaults to "latest". Examples: latest, 0.1.0, 0.2.2.
+    flowpipe-version: # optional, default is latest
+    # Flowpipe credentials to create. Accepts HCL format.
+    flowpipe-config: # optional
+                - name: Create Asana Task
+  # You may pin to the exact commit or the version.
+  # uses: honeycombio/gha-create-asana-task@804456b9b876e7a13fcc47e8839407c16acd03c5
+  uses: honeycombio/gha-create-asana-task@v1.0.1
+  with:
+    # Asana PAT
+    asana-secret: 
+    # Your Asana Workspace ID
+    asana-workspace-id: 
+    # Your Asana Project ID
+    asana-project-id: 
+    # Your Asana Section ID (column the task should belong to)
+    asana-section-id: 
+    # Name for Asana task
+    asana-task-name: 
+    # Description for Asana task
+    asana-task-description: # optional
+    # Date on which Asana task is due (YYYY-MM-DD)
+    asana-due-date: # optional
+    # List of tag IDs to associate with Asana task
+    asana-tags: # optional
+              - name: Application observability for AWS
+  # You may pin to the exact commit or the version.
+  # uses: aws-actions/application-observability-for-aws@95bb59e4538ba9ef746805d8a2bbbe531ba2a728
+  uses: aws-actions/application-observability-for-aws@v1.1.1
+  with:
+    # The bot name to respond to in comments (e.g., @awsapm)
+    bot_name: # optional, default is @awsapm
+    # The branch to merge PRs into (defaults to repository default branch)
+    target_branch: # optional
+    # Prefix for branches created by the action (e.g., 'awsapm/', 'awsapm-')
+    branch_prefix: # optional, default is awsapm/
+    # Comma-separated list of GitHub usernames allowed to use this action even without write access. Empty string (default) means only users with write/admin access can use it.
+    allowed_non_write_users: # optional, default is 
+    # GitHub token to use for API calls. If not provided, uses the default GitHub Actions token.
+    github_token: # optional, default is ${{ github.token }}
+    # Custom instructions to guide the AI agent's analysis and actions
+    custom_prompt: # optional, default is 
+    # CLI tool to use for investigation
+    cli_tool: # optional, default is claude_code
+    # Path to AI agent execution output file (used to post results back to GitHub). For claude_code path, pass this from claude-code-base-action outputs in a second call to this action.
+    output_file: # optional
+    # Execution status from AI agent (success or failure). Only used when output_file is provided.
+    output_status: # optional
+    # GitHub comment ID to update with results (required for Step 3 - pass from Step 1 output: steps.prepare.outputs.awsapm_comment_id)
+    comment_id: # optional
+    # Enable CloudWatch MCP server for metrics, alarms, and log insights
+    enable_cloudwatch_mcp: # optional, default is true
+    # Enable integration test mode (internal use only)
+    test_mode: # optional, default is false
+                               
